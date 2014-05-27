@@ -1,0 +1,55 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'scala'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+sourceCompatibility = 1.7
+version = '0.1'
+
+mainClassName='breakstep.Boot'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile localGroovy()
+
+    compile project(':lightest-core')
+
+    compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version:'2.3.2'
+    compile group: 'com.typesafe.akka', name: 'akka-remote_2.11', version:'2.3.2'
+    compile group: 'com.typesafe.akka', name: 'akka-cluster_2.11', version:'2.3.2'
+    compile group: 'com.typesafe.akka', name: 'akka-kernel_2.11', version:'2.3.2'
+    compile group: 'com.typesafe.akka', name: 'akka-contrib_2.11', version:'2.3.2'
+    compile group: 'org.scala-lang', name: 'scala-library', version: '2.10.3'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.2'
+
+    testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version:'2.3.2'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+task fatJar(type: Jar) {
+    dependsOn project.configurations.compile
+    classifier = 'fatjar'
+    from((project.configurations.compile).collect {
+        it.isDirectory() ? it : project.zipTree(it)
+    }) {
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+}
+
+run {
+    if(project.hasProperty('args')){
+        args project.args.split('\\s+')
+    } else {
+        def array = ["src/test/resources/actual.config", "../core/src/test/resources/com/googlecode/lightest/distributed/suite-class-ex.xml"]
+        args array
+    }
+}

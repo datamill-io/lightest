@@ -1,0 +1,8 @@
+<suite name='Suite1' parallel='classes' thread-count='1'>
+    <test name='Test1'>
+        <packages>
+            <package name="com.googlecode.lightest.distributed.*">
+            </package>
+        </packages>
+    </test>
+</suite>

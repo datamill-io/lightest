@@ -1,0 +1,114 @@
+table {
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.highlight-on-hover {
+    padding: 2px;
+    cursor: pointer;
+    border: solid 1px white;
+}
+
+.info-source-section {
+    margin-bottom: 1em;
+    float: right;
+    clear: right;
+    max-width: 50%;
+}
+
+.info-source-title {
+    text-align: right;
+}
+
+.info-source-table {
+    float: right;
+}
+
+.info-source-table th {
+    background: #def;
+}
+
+.info-source-table th, .info-source-table td {
+    border: solid 1px #89f;
+    padding: 4px;
+    font-family: monospace;
+}
+
+.task-container {
+    border-collapse: separate;
+}
+
+.task-container .task-main {
+    border: dotted 1px #aaa;
+    margin: 0px;
+    padding: 0px;
+}
+
+.task .task {
+    margin-left: 1.5em;
+}
+
+.task-result {
+    margin: .2em;
+}
+
+.task-result th {
+    border: solid 1px #aaa;
+    padding: 2px;
+}
+
+.task-header th {
+    text-align: left;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.task-name {
+}
+
+.task-params {
+}
+
+.task-start-time, .task-duration, .task-display-level, .task-emoticon {
+    width: 0px;
+    background-color: #ccc;
+    white-space: nowrap;
+}
+
+.task-info td {
+    border: solid 1px #aaa;
+    padding: 2px;
+}
+
+.task-info pre {
+    margin: 0;
+}
+
+.task-links-list {
+    list-style: none;
+    margin-top: 0px;
+    margin-left: 0px;
+    margin-bottom: 0px;
+    padding-left: 0px;
+}
+
+.response-data {
+    font-family: monospace;
+    white-space: pre;
+}
+
+.passed {
+    background-color: lightgreen;
+}
+
+.flagged {
+    background-color: #ffb;
+}
+
+.failed {
+    background-color: #fbb;
+}
+
+.doomed {
+    background-color: #aa55bb;
+}

@@ -1,0 +1,64 @@
+//The Groovy plugin prefers to have Java code that depends on Groovy code interlaced in the src/groovy paths. This happens a lot with lightest core due to Groovy interfaces.
+
+apply plugin: 'application'
+mainClassName = 'com.googlecode.lightest.core.TestRunner'
+
+configurations {
+    antlr3
+}
+
+project.ext.grammarpackage = "com/googlecode/lightest/core/filter"
+
+description = 'Lightest Core'
+version = '0.7-SNAPSHOT'
+dependencies {
+    compile localGroovy()
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version:'2.2.1'
+    compile group: 'org.testng', name: 'testng', version:'5.10', classifier:'jdk15'
+    compile group: 'net.sf.saxon', name: 'saxon-dom', version:'8.7'
+    compile group: 'org.reportyng', name: 'reporty-ng', version:'1.2'
+    compile group: 'xerces', name: 'xercesImpl', version:'2.9.1'
+    compile group: 'commons-cli', name: 'commons-cli', version:'20040117.000000'
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version:'2.11.0'
+    compile group: 'org.antlr', name: 'antlr-runtime', version:'3.0.1'
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-remote-driver', version:'2.11.0'
+    compile group: 'org.apache.ant', name: 'ant', version:'1.7.0'
+    compile group: 'com.google.inject', name: 'guice', version:'2.0'
+    testCompile group: 'org.easymock', name: 'easymockclassextension', version:'2.4'
+    testCompile group: 'org.codehaus.mojo', name: 'cobertura-maven-plugin', version:'2.2'
+    testCompile group: 'org.gmock', name: 'gmock', version:'0.7.0'
+    antlr3 group: 'org.antlr', name: 'antlr', version: '3.0.1'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+task antlrOutputDir << {
+    mkdir(generateGrammarSource.destinationDir)
+}
+
+task generateGrammarSource(dependsOn: antlrOutputDir, type: JavaExec) {
+    description = 'Generates Java sources from Antlr3 grammars.'
+
+    destinationDir = "$buildDir/generated-sources/antlr"
+    def antlrSource = 'src/main/antlr'
+
+    inputs.dir file(antlrSource)
+    outputs.dir file(destinationDir)
+
+    def grammars = fileTree(antlrSource).include('**/*.g')
+
+    main = 'org.antlr.Tool'
+    classpath = configurations.antlr3
+    args = ["-o", "${destinationDir}/${project.ext.grammarpackage}", grammars.files].flatten()
+}
+
+compileGroovy {
+    dependsOn generateGrammarSource
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDir generateGrammarSource.destinationDir
+        }
+    }
+}

@@ -1,0 +1,6 @@
+rootProject.name = 'lightest-umbrella'
+include ':lightest-core'
+project(':lightest-core').projectDir = "$rootDir/core" as File
+
+include ':lightest-breakstep'
+project(':lightest-breakstep').projectDir = "$rootDir/breakstep" as File

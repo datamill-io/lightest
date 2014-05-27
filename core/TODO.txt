@@ -1,0 +1,24 @@
+== Unscoped ==
+
+* create maven repo, plugin
+* annotation editor
+* make intermediate report generation smarter, i.e. don't re-generate unless
+  absolutely necessary
+  * investigate and improve slowness in report generation (is it the XSLT?)
+* environment setup, teardown
+* implement configuration validation
+
+== Scoped for 0.3 ==
+
+* search for suites
+* create suites, set temporary flag
+* run suites
+* upload / post suite XML
+* search for individual tests
+* link from tests to their owning suites / link from suites to tests
+* update documentation against API changes
+* make specifying config file optional - check using file extension
+* create release notes text file
+* Refactor SimpleApi use - task packages should be configured in file
+
+== Questions to Answer ==

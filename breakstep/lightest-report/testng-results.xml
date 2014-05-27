@@ -1,0 +1,18 @@
+<testng-results>
+  <reporter-output>
+  </reporter-output>
+  <suite name="Suite1">
+    <groups>
+    </groups>
+    <test name="Test1" duration-ms="170" started-at="2014-05-27T14:12:05Z" finished-at="2014-05-27T14:12:05Z">
+      <class name="com.googlecode.lightest.distributed.FailureTest">
+        <test-method status="FAIL" signature="makeItFail()" name="makeItFail" duration-ms="10" started-at="2014-05-27T14:12:05Z" id="2" finished-at="2014-05-27T14:12:05Z">
+        </test-method>
+      </class>
+      <class name="com.googlecode.lightest.distributed.SuccessfulTest">
+        <test-method status="PASS" signature="makeItSucceed()" name="makeItSucceed" duration-ms="82" started-at="2014-05-27T14:12:05Z" id="1" finished-at="2014-05-27T14:12:05Z">
+        </test-method>
+      </class>
+    </test>
+  </suite>
+</testng-results>

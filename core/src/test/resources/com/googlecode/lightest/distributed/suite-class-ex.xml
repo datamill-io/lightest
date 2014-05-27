@@ -1,0 +1,8 @@
+<suite name='Suite1' parallel='classes' thread-count='1'>
+    <test name='Test1'>
+        <classes>
+            <class name="com.googlecode.lightest.distributed.FailureTest" />
+            <class name="com.googlecode.lightest.distributed.SuccessfulTest" />
+        </classes>
+    </test>
+</suite>

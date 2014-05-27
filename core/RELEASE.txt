@@ -1,0 +1,146 @@
+These are the release notes for Lightest Core.
+
+
+==== Lightest Core 0.4 ====
+
+New Features:
+
+*   The "built-in" XML, pending, and failed reporters can now be overridden in
+    the configuration.
+
+*   Reporters implementing IReporter but not ILightestReporter are now
+    automatically wrapped with an adapter class that allows for generateReport()
+    to be invoked at the end of each test method run. An optional cooldown
+    factor may be applied to reduce the performance penalty of generating
+    reports frequently.
+
+
+Changes:
+
+*   Improved memory usage and general performance of the runner, and also
+    improved javascript performance in the report.
+
+*   Report aesthetics improved for non-Firefox browsers.
+
+*   Upgraded the bundled version of TestNG from 5.8 to 5.10 .
+
+*   Upgraded the bundled version of TestNG-XSLT to 1.1 .
+
+*   Added the "started-at", "finished-at", and "duration" attributes to the
+    <test> element in the testng-results.xml .
+
+*   Added a check for duplicate suite names at the beginning of the suite run.
+
+*   Divided responsibility of removed "DefaultReporter" class between two new
+    classes: DefaultDetailsReporter and DefaultSummaryReporter.
+    
+*   The following interfaces have been modified since 0.3:
+    -   IConfiguration
+    -   ILightestReporter
+    -   ILightestTestListener
+    -   ITaskDispatcher
+
+
+Bugfixes:
+
+*   Fixed Issue 3: "testng-failed.xml Not Always Updated Throughout Run".
+*   Fixed configuration method links not working in report.
+*   Fixed Issue 4: "Disabled Tests Still Display as Pending in Report"
+
+
+==== Lightest Core 0.3 ====
+
+New Features:
+
+*   Tests and tasks can now access a "context" object, in addition to env and
+    prefs. The lifetime of values associated with the context is typically
+    the lifetime of the test method. This facilitates passing of values between
+    tasks that does not involve mucking with env.
+    
+*   The test report now displays a list of pending method invocations, along
+    with a percentage slice of the SVG pie chart. It is created and updated
+    as the test runs, i.e. not just once at the end.
+    
+*   Added a canRunIn() method to LightestTestCase, which can provide hints to
+    a dispatcher assignment strategy as to whether the test can be run in a
+    given test environment.
+    
+*   Invoking the runner with -b or --batch will disable the ability to enter
+    interactive mode by hitting [Enter].
+    
+*   The following are now configurable in the configuration file:
+    -   taskDispatchStrategy (by class)
+    -   context              (by class)
+    -   reporters            (multiple can be specified, by class)
+    -   listeners            (multiple can be specified, by class)
+    
+*   Parameter values specified in task invocation are now auto-wired to
+    properties with the same className, in LightestTask's. For example, if a task
+    class declares a property "String foo", the value of config.'@foo', as a
+    String, will be assigned to the property by the time doPerform() is called.
+    Two notable exceptions are "value" and "className", which have special meaning
+    to tasks.
+
+*   Tests can now be run by package, as specified in the TestNG suite XML file.
+    This was not working previously - .groovy files were being ignored by the
+    TestNG class finder.
+
+*   Finer-grained control over HTML links that appear in the task details of
+    the report.
+
+*   A TestNG suite XML representing the pending tests is created and updated
+    throughout the test run. This does not include failed tests - only ones
+    that have not yet been run.
+
+
+Changes:
+
+*   Added ITaskProvider interface, and ability to query for a task provider
+    from the context object. This makes it possible for tasks to be executed
+    outside of test and task classes.
+    
+*   The context object is now thread-agnostic; each thread of a test with
+    method-level threading now keeps its own local context values. Previously,
+    all threads would have shared the same values.
+    
+*   The context, env, and prefs objects are now all available in the
+    configure() method of LightestTask's.
+    
+*   Improvements to Selenium tutorial.
+
+*   Upgraded bundled Groovy version to 1.6.3 .
+
+*   The format of the testng-results.xml file has mostly been reverted to its
+    original TestNG format. Task information is now saved as separated
+    test-result-X.xml files. Task information is not maintained in memory
+    throughout the duration of the test run, alleviating some memory issues.
+    
+*   Improved usability of dynamic behavior in report details page.
+
+*   Unloadable Groovy classes are skipped by the runner, with a message printed
+    to the console. This avoids crashing the TestNG runner with a cryptic error
+    message.
+
+*   The following interfaces have been modified since 0.2:
+    -   IConfiguration
+    -   IInterruptibleTaskDispatchStrategy (added)
+    -   ILightestReporter
+    -   ILightestTestListener
+    -   IPreferences
+    -   IReporterInfoSource (added)
+    -   ITask
+    -   ITaskDispatcher
+    -   ITaskProvider (added)
+    -   ITaskResult
+    -   ITestEnvironment
+    -   ITestRegistryAcceptor (added)
+    -   ITestRunner
+
+
+Bugfixes:
+
+*   Fixed some concurrency issues when running tests in parallel.
+*   Fixed error in task duration calculation.
+*   Fixed exception stack trace not being shown in report.
+*   Fixed before / after methods not being run for tests with groups.
+*   Many other fixes.

@@ -1,0 +1,372 @@
+<html>
+<head>
+<title>Lightest Documentation</title>
+<style type="text/css">
+body {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+dt {
+    font-weight: bolder;
+}
+dd {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+pre {
+    margin: 10px;
+    padding: 10px;
+    background-color: #eaeaea;
+}
+code {
+    padding: 2px;
+    background-color: #dfd;
+}
+table {
+    border-collapse: collapse;
+    border: solid 1px black;
+}
+th, td {
+    border: solid 1px grey;
+    padding: 5px;
+}
+.highlight {
+    background-color: #eea;
+}
+.deprecated {
+    font-style: italic;
+    color: #c99;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Lightest Documentation</h1>
+
+<p>This documentation provides some useful reference material related to using Lightest. For a more hands-on reference, try the <a href="lightest-tutorial.html">Lightest tutorial</a>!</p>
+
+<h2>What Is Lightest?</h2>
+
+<p>Lightest is a task-oriented functional and integration test automation framework built on Groovy and TestNG. It's a "framework framework" that is intended to greatly simplify the process of creating your own custom framework by implementing the testcase management, execution, and reporting for you - all you do is define the test environment and write the tasks!</p>
+
+<p>You might want to try Lightest if:</p>
+
+<ul>
+<li>You want to whip up a test automation solution in a flash</li>
+<li>You find you are using a unit testing framework for functional or integration level testing</li>
+<li>You are testing a GUI or web application</li>
+<li>You want to transition from an unscripted test automation solution to a scripted one</li>
+<li>Your test automation framework needs to use Java libraries</li>
+<li>You love Groovy</li>
+<li>You love TestNG</li>
+<li>You love staying <a href="http://en.wikipedia.org/wiki/DRY">DRY</a></li>
+</ul>
+
+<p>The <a href="http://code.google.com/p/lightest">Lightest project</a> is hosted on Google Code. You may download releases, browse the source, or file issues there.</p>
+
+<h2>Running Lightest</h2>
+
+<p>The Lightest framework comes with a runner packaged in an executable JAR. The standalone distribution includes all required dependencies; no external libraries are needed. Tests are run from the command line by specifying a configuration file (see below for syntax) and <em>either</em> a list of Groovy test files (which subclass <code>LightestTestCase</code>, also see below) <em>or</em> a TestNG suite XML file which specifies the test classes and groups to run. The most important configuration to get right is the <code>classPaths</code> element; most other configurations have sensible defaults.</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar config.txt MyTest.groovy MyTest2.groovy</pre>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar config.txt testng.xml</pre>
+
+<p>You can start the runner in interactive mode by providing the right switch:</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar --interactive config.txt MyTest.groovy</pre> 
+
+<p>Lightest requires at least Java <code>1.5</code> . Surprisingly, you shouldn't need to install Groovy on your machine to run Lightest. However, you'll probably want to have a reasonably recent version (<code>1.5.4</code> or later) to use when developing your tasks. If you don't have it, <a href="http://groovy.codehaus.org/Download">get it here</a>!</p>
+
+<p>The runner produces an HTML report, which in turn is generated from an XML report. HTML is probably the most convenient reporting format; however, it is possible to customize Lightest to create reports in other formats. See <a href="lightest-tutorial.html">the tutorial</a> for screenshots of the reports that are produced.</p>
+
+<h2>Configuration File Reference</h2>
+
+<p>The configuration file specified as the first argument to the runner follows a Groovy builder syntax, with the <code>config</code> element as its root node.</p>
+
+<table>
+<tr><th>Element</th>
+    <th>Description</th>
+    <th>Example</th>
+</tr>
+<tr><td>classPaths</td>
+    <td><p>Contains <code>path</code> elements which enumerate the class paths that should be used to locate task, testcase, preference, and environment classes. By default, the current directory <code>.</code> is included in the path. There is no limit to the number of entries.</p>
+        <p>You will probably get an error if any class specified in a configuration cannot be loaded from the class paths set here.</p></td>
+    <td><pre>config {
+...
+    classPaths {
+        path ('/path/to/tasks')
+        path ('../path/to/tests')
+    }
+...
+}</pre></td>
+</tr>
+<tr><td>outputDir</td>
+    <td>Specifies the report output directory. The report files will be placed directly in this directory. If unspecified, by default the report will be created in the <em>lightest-report</em> directory in the directory where the test runner was invoked. If more than one directory is specified, only the first entry will be used.</td>
+    <td><pre>config {
+...
+    outputDir ('/path/to/report')
+...
+}</pre></td>
+</tr>
+<tr><td>prefs</td>
+    <td>Specifies name-value pairs for preferences to be shared across all tests being configured in this run. The preferences must have a corresponding class, which has publicly-accessible properties to match the preference names. There should be only one <code>prefs</code> element.</td>
+    <td><pre>config {
+...
+    prefs (class: 'my.package.Preferences') {
+        timeout (5000)
+        corpus ('main')
+    }
+...
+}</pre></td>
+</tr>
+<tr><td>envs</td>
+    <td><p>Enumerates test environments that are available to the tests being configured in this run. Tests may be run concurrently across these environments.</p>
+        <p>All environments correspond to a single class, but have name-value pairs which may differentiate them. Testcases and tasks are able to access these values for the purpose of interacting with their respective environment. These name-value pairs must match properties of the environment class. Each environment must have a unique <code>String</code> identifier.</p>
+        <p>There should be only one <code>envs</code> element. If none are specified, 3 default environments identified by <code>unspecified1</code>, <code>unspecified2</code>, and <code>unspecified3</code> will be provided.</p></td>
+    <td><pre>config {
+...
+    envs (class: 'my.package.Environment') {
+        env (id: 'windows') {
+            homeDir ('C:\\Documents and Settings\\me')
+            appName ('my.app')
+        }
+        env (id: 'linux') {
+            homeDir ('/home/me')
+            appName ('my.app')
+        }
+        env (id: 'macos') {
+            homeDir ('/Users/me')
+            appName ('my.app')
+        }
+    }
+...
+}</pre></td>
+</tr>
+<tr><td>reporters</td>
+    <td><p>You may specify reporter classes that will be used instead of the <code>DefaultSummaryReporter</code> and <code>DefaultDetailsReporter</code> to generate the report output. This class should implement <em>at least one of</em> <code>org.testng.IReporter</code> and <code>ILightestReporter</code>; implementing both is ok. Additional properties of each reporter may be specified here as well.</p>
+    <p>Classes that implement only <code>IReporter</code> will be wrapped with an adapter class that implements <code>ILightestReporter</code> fully, and support having the <code>generateReport()</code> method be called after each test run. To enable this behavior, set the <code>updateEnabled</code> property to <code>true</code> in the configuration; it is disabled by default. Additionally, "scheduling" behavior may be enabled by setting the <code>scheduled</code> property to <code>true</code>; it is disabled by default. The cooldown multiplier may then be adjusted by setting the <code>cooldownFactor</code> property to a positive number; the default value is <code>25</code>.</p>
+    <p>Additionally, you may override the following built-in XML-based reporters - <code>com.googlecode.lightest.core.XMLReporter</code>, <code>com.googlecode.lightest.core.PendingReporter</code>, and <code>org.testng.reporters.FailedReporter</code> - by specifying the respective reporter role name with the <code>role</code> attribute. The following role name constants are defined in the <code>Configuration</code> class: <code>XMLReporter</code>; <code>PendingReporter</code>; <code>FailedReporter</code> .</td>
+    <td><pre>config {
+...
+    reporters {
+        reporter (class: 'my.package.Reporter') {
+            updateEnabled (false)
+            scheduled     (false)
+        }
+        reporter (class: 'my.package.Reporter2')
+        reporter (class: 'my.package.Reporter3', role: 'XMLReporter') {
+            prop3 ('value3')
+            prop4 ('value4')
+        }
+    }
+...
+}</pre></td>
+</tr>
+<tr><td>listeners</td>
+    <td>Listeners can be registered with the TestNG engine directly. One or more custom listeners can be specified by class, which must implement <code>org.testng.ITestNGListener</code>; typically either <code>ITestListener</code> or <code>ISuiteListener</code>. Additional properties of each listener may be specified here.</td>
+    <td><pre>config {
+...
+    listeners {
+        listener (class: 'my.package.Listener') {
+            prop1 ('value1')
+            prop2 ('value2')
+        }
+        listener (class: 'my.package.Listener2')
+    }
+...
+}</pre></td>
+</tr>
+<tr><td>dispatcherAssignmentStrategy</td>
+    <td>You may specify a strategy class that will be used instead of the default <code>SimpleDispatcherAssignmentStrategy</code> to decide how task dispatchers (which are associated with test environments) get assigned to testcase classes. This class must implement <code>IDispatcherAssignmentStrategy</code>, and may for convenience extend <code>QueuedDispatcherAssignmentStrategy</code> to handle concurrency. There should be only one <code>dispatcherAssignmentStrategy</code> element.</td>
+    <td><pre>config {
+...
+    dispatcherAssignmentStrategy (class: 'my.package.Strategy')
+...
+}</pre></td>
+</tr>
+<tr><td>taskDispatchStrategy</td>
+    <td><p>Sets the dispatch strategy to use instead of the default. The strategy must implement <code>ITaskDispatchStrategy</code>; if it also implements <code>IInterruptibleTaskDispatchStrategy</code>, the test runner will invoke <code>interrupt()</code> on the strategy when requested to enter interactive mode.</p>
+        <p>Bean properties can be specified on the strategy in this configuration.</p></td>
+    <td><pre>config {
+...
+    taskDispatchStrategy (class: 'my.package.Strategy') {
+        prop1 ('value1')
+        prop2 ('value2')
+    }
+...
+}</pre></td>
+</tr>
+</table>
+
+<h2>Core Classes Overview</h2>
+
+<h3>SimpleApi</h3>
+
+<p>The <code>SimpleApi</code> class (<code>com.googlecode.lightest.core.SimpleApi</code>) provides a convenient way to define the set of tasks that are available to a given testcase. It can search one or more Java package paths for tasks by name, and returns the first task found. By default, all tasks in the current working directory of the test runner are included by <code>SimpleApi</code> instances.</p>
+
+<p>Use <code>addPackage(String packageName)</code> to add a new package path to the API. For example, if your tasks are defined in the package <code>com.sample.tasks</code>, you could do:</p>
+
+<pre>
+def api = new SimpleApi()
+api.addPackage('com.sample.tasks')
+</pre>
+
+<p>Or simply:</p>
+
+<pre>def api = new SimpleApi('com.sample.tasks')</pre>
+
+<p><code>SimpleApi</code> implements <code>IDomainSpecificApi</code>, specifically its <code>getTask(String name)</code> method. You may use a custom implementation of this interface that doesn't obtain tasks by package at all, and uses some other mechanism.</p>
+
+<h3>LightestTestCase</h3>
+
+<p>All Lightest tests extend <code>LightestTestCase</code> (<code>com.googlecode.lightest.core.LightestTestCase</code>), which is responsible for properly interpreting tasks specified with the builder syntax in its test methods. Subclasses should call <code>setApi(IDomainSpecificApi api)</code> before invoking any tasks. This can be done in the constructor of the test class, or in a <code>@Before</code> method. In its simplest form:</p>
+
+<pre>
+class MyTest extends LightestTestCase {
+
+    MyTest() {
+        setApi(new SimpleApi())
+    }
+}
+</pre>
+
+<p><code>LightestTestCase</code>'s are run by the TestNG runner; you must always use the <code>@Test</code> annotation to mark test methods and <code>@Before</code> / <code>@After</code> to mark fixture setup and teardown methods, respectively. To make use of JUnit assertions, add the appropriate static import to the top of the file:</p>
+
+<pre>
+import static org.testng.AssertJUnit.*
+</pre>
+
+<p>You can access the test environment (implementing <code>ITestEnvironment</code>) assigned to the testcase in any given test method directly via the <code>env</code> property. You can access the preferences via <code>prefs</code>. You may also obtain either from the <code>context</code>, e.g. <code>context.env</code>:</p>
+
+<pre>
+    @Test
+    void myTest() {
+        def port = env.port  // equivalent to "context.env.port"
+        ...
+    }
+</pre>
+
+<p>You can add properties to the <code>context</code> in the scope of any test method as if it were a <code>Map</code>, and these can be accessed by any tasks that are invoked, also via the <code>context</code>. Each test method always starts with a fresh context. Note that some special property names are reserved, i.e. <code>env</code> and <code>prefs</code> .</p>
+
+<h3>LightestTask</h3>
+
+<p>Each task used in a testcase should have as its implementation a corresponding subclass of <code>LightestTask</code> (<code>com.googlecode.lightest.core.LightestTask</code>). The task is responsible for performing some action, and populating a result object (see the next section) depending on whether the action succeeded or failed. Subclasses of <code>LightestTask</code> only have to implement a single method, <code>doPerform(ITaskResult result)</code>:</p>
+
+<pre>
+class MyTask extends LightestTask {
+
+    void doPerform(ITaskResult result) {
+        println 'Been there, done that.'
+        result.fail()
+    }
+}
+</pre>
+
+<p>Three key properties are available for inspection in task classes - <code>config</code>, <code>prefs</code>, and <code>env</code> .<p>
+
+<p>The <code>config</code> object is essentially a <code>groovy.util.Node</code> from which the parameters to the task may be accessed. Attributes are accessed using the <code>.'@attributeName'</code> notation, and values can be accessed with <code>.nodeValue()</code> . For example:</p>
+
+<em>MyTest.groovy</em>
+<pre>
+    @Test
+    void myTest() {
+        MyTask (attr1: 'foo', attr2: 'bar, 'baz')
+    }
+</pre>
+    
+<em>MyTask.groovy</em>
+<pre>
+    void doPerform(ITaskResult result) {
+        println config.'@attr1'     // prints "foo"
+        println config.'@attr2'     // prints "bar"
+        println config.nodeValue()  // prints "baz"
+    }
+</pre>
+
+<p>Two attributes on <code>config</code> have special meaning in the context of Lightest - <code>description</code> and <code>breakpoint</code>. If set, the String representation of <code>description</code> will be automatically visible with the task in the report. If for a given task <code>breakpoint</code> is set to any value that evaluates to <code>true</code>, the test will pause at that task if the runner is in interactive mode. You don't have to do anything in the task definition for these features to work.</p>
+
+<p>Any preference values specified in the configuration file may be accessed from <code>prefs</code>. And any environment values may be accessed from <code>env</code>. Also available is the <code>context</code> object.</p>
+
+<h3>ITaskResult</h3>
+
+<p>Executing a task always produces a <code>ITaskResult</code> (<code>com.googlecode.lightest.core.ITaskResult</code>). The values populated on this object will appear in the report for the test run. The important values to consider setting are <code>status</code>, <code>message</code>, <code>detailedMessage</code>, and <code>links</code> . The <code>ITaskResult</code> object is passed into the <code>doPerform()</code> method, and should be populated therein.</p>
+
+<p>The <code>status</code> of the result is what determines whether the task succeeded or failed. By default, the status is set to indicate success (<code>STATUS_OK</code>). Setting it to anything else indicates failure at some level. In order of increasing severity, you can invoke <code>flag()</code>, <code>fail()</code>, or <code>doom()</code> on the result object to do this.</p>
+
+<p>Use <code>setMessage(String message)</code> to set an informational message to be displayed in the report. In particular, display any information related to why the task may have failed.</p>
+
+<p>Use <code>setDetailedMessage(String detailedMessage)</code> to set larger chunks of text that may have been produced in performing the task.</p>
+
+<p>Finally, use <code>addLink(String link)</code> to add a link to related resources, such as documents or screenshots. The link text will appear in the report, exactly as specified using this method. Multiple links may be specified. Use <code>addLink(TaskResultLink link)</code> if you need greater control of the HTML rendering of the link.</p>
+
+<h2>Task Lifecycle</h2>
+
+<p>The following table describes the lifecycle of a Lightest task, which is an implementation of <code>ITask</code> (and typically, but not necessarily, a subclass of <code>LightestTask</code>). This may be useful to know if you want to inject custom logic at specific points of the lifecycle.</p>
+
+<table>
+<tr>
+    <th>#</th>
+    <th>Step Name</th>
+    <th>Step Description</th>
+</tr>
+<tr>
+    <td>1</td>
+    <td>Build <code>TaskNode</code></td>
+    <td>A task is "invoked" in the test when a call for a missing method is encountered in the test. The test class' (i.e. <code>LightestTestCase</code>'s) <code>methodMissing()</code> logic assumes the missing method call conforms to Groovy builder syntax, and builds a <code>TaskNode</code> representing the task its child tasks, if any.</td>
+</tr>
+<tr>
+    <td>2</td>
+    <td>Create Task Instance</td>
+    <td>The test class' <code>api</code> object, which implements <code>IDomainSpecificApi</code>, is queried for an instance of the task. If a <code>SimpleApi</code> is being used, a new task is instantiated simply by invoking the task class' no-argument constructor.</td>
+</tr>
+<tr>
+    <td>3</td>
+    <td>Call <code>configure()</code></td>
+    <td><p>The task instance's <code>configure()</code> method is called. The <code>env</code>, <code>prefs</code>, and <code>context</code> members are all available and correctly populated by this time, via the <code>dispatcher</code>. For instances of <code>LightestTask</code>, auto-wiring of task attributes to properties is performed in <code>configure()</code>; to employ logic that runs before the auto-wiring, override the method, and call <code>super.configure()</code> after the custom logic is finished.</p>
+        <p>Auto-wiring takes effect for <code>String</code>, <code>int</code>, and <code>boolean</code> properties. For each attribute in the <code>TaskNode</code> representing the task, if an identically named property has been declared in the test class, <code>configure()</code> will assign the value of the attribute to its corresponding same-named property, performing some basic type conversions along the way. For example if I have the following:</p>
+        <pre>class MyTask extends LightestTask {
+    boolean waitForSignal
+    ...
+}</pre>
+        <p>and the task was invoked as:</p>
+        <pre>MyTask (waitForSignal: 'false')</pre>
+        <p>the boolean (not <code>String</code>!) value <code>false</code> would be assigned to the <code>waitForSignal</code> property in the task instance by <code>configure()</code>. In other words, the following would be true:</p>
+        <pre>waitForSignal == config.'@waitForSignal'</pre>
+        <p>The two exceptional cases are for the attributes <code>name</code> and <code>value</code>. These must always be referenced from the <code>config</code> object, because they have special meaning in the context of tasks. Use:</p>
+        <pre>config.'@name'
+config.'@value'</pre></td>
+</tr>
+<tr>
+    <td>4</td>
+    <td>Dispatch Task</td>
+    <td><code>dispatch()</code> is invoked on the <code>ITaskDispatchStrategy</code> associated with the test, passing the configured task instance. In many cases (including the default case, where the <code>SimpleTaskDispatchStrategy</code> is in play), the strategy simply invokes the task's <code>perform()</code> method. Subclasses of <code>LightestTask</code> enjoy protection from exceptions being thrown from the task; their task logic is implemented within <code>doPerform()</code>.</td>
+</tr>
+<tr>
+    <td>5</td>
+    <td>Perform Child Tasks</td>
+    <td>If the task has any child tasks, and if the task succeeded, child tasks are now performed, starting at creating them via the <code>api</code> (they should already exist in the <code>TaskNode</code> tree). If the task failed, all child tasks are skipped.</td>
+</tr>
+</table>
+
+<h2>Other Resources</h2>
+
+<ul>
+<li><a href="apidocs/index.html">Lightest API</a></li>
+<li><a href="lightest-tutorial.html">Lightest Tutorial</a></li>
+<li><a href="http://code.google.com/p/lightest">Lightest Project Page</a></li>
+<li><a href="http://stressfreetesting.com/lightest">Lightest @ stressfreetesting.com</a></li>
+<li><a href="http://testng.org/doc/documentation-main.html">TestNG Documentation</a></li>
+<li><a href="http://groovy.codehaus.org/api/">Groovy API</a></li>
+</ul>
+
+<p><em>- Haw-Bin Chai (hbchai @t gmail d0t com)</em></p>
+
+<br />
+<br />
+<br />
+<br />
+
+</body>
+</html>

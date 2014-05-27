@@ -1,0 +1,1616 @@
+<html>
+<head>
+<title>Lightest Tutorial</title>
+<style type="text/css">
+body {
+    margin-left: 5%;
+    margin-right: 5%;
+}
+dt {
+    font-weight: bolder;
+}
+dd {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+pre {
+    margin: 10px;
+    padding: 10px;
+    background-color: #eaeaea;
+}
+code {
+    padding: 2px;
+    background-color: #dfd;
+}
+table {
+    border-collapse: collapse;
+    border: solid 1px black;
+}
+th, td {
+    border: solid 1px grey;
+    padding: 5px;
+}
+.highlight {
+    background-color: #eea;
+}
+.deprecated {
+    font-style: italic;
+    color: #c99;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Lightest Tutorial</h1>
+
+<h2>Introduction</h2>
+
+<p>Lightest is a lightweight, task-oriented functional and integration testing framework. It is designed to jumpstart custom testing framework creation by removing common obstacles such as test syntax derivation, test execution management, and test result reporting. It stands on the shoulders of <a href="http://testng.org/">TestNG</a> and built with the capable goodness of <a href="http://groovy.codehaus.org/">Groovy</a>.</p>
+
+<p>Lightest truly enables test automation on all scales, not just on the unit level. And it's so light, you'll forget it's even there.</p>
+
+<p>This tutorial steps you through the process of installing Lightest, creating basic testing tasks and tests, and understanding the major benefits the framework has to offer. To get through this tutorial, you'll need to have working knowledge of Java and/or Groovy, or a similar language such as C#. Examples abound, so don't be afraid to dive right in!</p>
+
+<p>(Note that some of the screenshots below may be outdated - even so, they should give an idea of what you would be seeing well enough!)</p>
+
+<h2>Getting Lightest</h2>
+
+<p>You can get a copy of Lightest from the <a href="http://code.google.com/p/lightest/downloads/list">Google Code project download page</a>. The current version is <code>0.5</code> . The download archive contains the executable jar, license, and some documentation. Lightest is made available under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0 license</a>.</p>
+
+<p>Lightest requires a version of Java that supports annotations, and a recent version of Groovy. I'm currently running Java <code>1.5.0_16</code> and Groovy <code>1.5.6</code>; you should be fine if you have ballpark versions.</p>
+
+<p>For this tutorial, simply unpack the distribution.</p>
+
+<h2>Hello World!</h2>
+
+<p>Lightest tests really are TestNG tests. To prove it, we'll begin by writing the simplest possible test, and running it with the Lightest test runner.</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTestCase
+import org.testng.annotations.*
+
+class Tutorial extends LightestTestCase {
+    
+    @Test
+    void sayHello() {
+        println "Hello World!"
+    }
+}
+</pre>
+
+<p>Create an empty file called <em>tutorial.config</em> in the same directory as <em>Tutorial.groovy</em> .</p>
+
+<p>We're ready for a test run. For simplicity's sake, I'll assume the Lightest core distribution jar is in the same folder along with the files we just created. You'll have to provide the path to the jar in your command line otherwise.</p>
+
+<pre>$ <span class="highlight">java -jar lightest-core-0.5-standalone.jar tutorial.config Tutorial.groovy</span></pre>
+
+<p>You should see some output like:</p>
+
+<pre>
+[Parser] Running:
+  /private/tmp/lightest-suite33716.xml
+
+Hello World!
+
+===============================================
+Suite1
+Total tests run: 1, Failures: 0, Skips: 0
+===============================================
+
+</pre>
+
+<p>Alright - you've run your first Lightest test! Easy enough. Now let's see why Lightest is called a "task-oriented" testing framework. What are tasks?</p>
+
+<p>Let's start by creating a task which prints "Hello World!" to the console, just as we did above using <code>println</code> . Each task is written as its own Groovy class, and implements the <code>ITask</code> interface. Most of the work is done by the task's <code>perform()</code> method. To keep things nice and easy, we'll bootstrap our first task class by extending <code>LightestTask</code>, which adds some default behaviors for other <code>ITask</code> methods, and allows us to specify the task logic in a single <code>doPerform()</code> method.</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+class HelloWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        println 'Hello World!'
+    }
+}
+</pre>
+
+<p>Let's go ahead an whip up a quick test that uses our shiny new task!</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTestCase
+import com.googlecode.lightest.core.SimpleApi
+import org.testng.annotations.*
+
+class Tutorial extends LightestTestCase {
+
+    Tutorial() {
+        def api = new SimpleApi()
+        setApi(api)
+    }
+    
+    @Test
+    void sayHello() {
+        HelloWorld ()
+    }
+}
+</pre>
+
+<p>All Lightest tests extend <code>LightestTestCase</code>. Since they are also TestNG tests, they make use of TestNG annotations, such as <code>@Test</code>, which indicates that a given method should be considered a test method. To invoke the HelloWorld task, we simply provide the name of the task class - which is HelloWorld! Now let's actually give our greeting by running this test. There is one final piece of the puzzle before we can do that - the configuration file. Let's fill it in a bit.</p>
+
+<em>tutorial.config</em>
+<pre>
+config {
+    classPaths {
+        path ('/Users/chai/work/tutorial')
+    }
+}
+</pre>
+
+<p>For now, we're putting all of our Groovy files in the same directory. I'm putting them in <em>/Users/chai/work/tutorial</em> . I specify this path in the configuration file. You might notice that this configuration file takes on the Groovy builder syntax, which allows concise specification of nested data structures. You'll be seeing more builder syntax later. For a complete configuration file reference, consult the <a href="lightest-documentation.html">Lightest documentation</a>.</p>
+
+<p>Ok, invoke the test runner again!</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar tutorial.config Tutorial.groovy</pre>
+
+<p>You will see similar output in the console, including our "Hello World!" greeting. And if you navigate to the <em>lightest-report</em> directory, you should see that some files were generated there. Open up <em>lightest-report/index.html</em> in a web browser, and you'll see an HTML report. Drill down into the suite, and mouse over the "HelloWorld" task. You should see it expand with details like this:</p>
+
+<p style="text-align: center"><img src="tutorial-images/hello-world.png" /></p>
+
+<p>Tasks are the fundamental building blocks of Lightest tests. While in any given test you are free to do just anything Groovy allows you to, tasks bring the coherence and reportability to your tests that has traditionally been lacking in pure unit testing frameworks. Lightest enable you to easily create the tasks you want - but of course, it is up to you to design tasks appropriate for your application or system under test. Lightest will help where it can!</p>
+
+<p>Congratulations! You're a Lightest tester!</p>
+
+<h2>Better Results, Now!</h2>
+
+<p>Our HelloWorld task is great, but wouldn't it be even better if we could choose to give a slightly different greeting? After all, just saying "Hello World!" all the time might get a little boring. Let's parameterize the task! Modify it as follows (from here on in, <code>import</code> statements will be omitted unless they are significant):</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+class HelloWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        println <span class="highlight">config.'@greeting' ?:</span> 'Hello World!'
+    }
+}
+</pre>
+
+<p>If you run the task as you ran it before, the same result - "Hello World!" will be printed to the console. Modify your test to say a different greeting:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+class Tutorial extends LightestTestCase {
+
+    Tutorial() {
+        def api = new SimpleApi()
+        setApi(api)
+    }
+    
+    @Test
+    void sayHello() {
+        HelloWorld ()
+    }
+    
+<span class="highlight">    @Test
+    void sayGreeting() {
+        HelloWorld (greeting: "Top of the mornin', world!")
+    }</span>
+}
+</pre>
+
+<p>Running the test, we get output like:</p>
+
+<pre>
+[Parser] Running:
+  /private/tmp/lightest-suite36602.xml
+
+Top of the mornin', world!
+Hello World!
+
+===============================================
+Suite1
+Total tests run: 2, Failures: 0, Skips: 0
+===============================================
+
+</pre>
+
+<p>Now there's no way anyone can catch us boring the world with our salutations! In our task, we made use of the <code>greeting</code> attribute of the <code>config</code> object to pass along information from the test. The <code>config</code> object is automatically available to any tasks that subclass <code>LightestTask</code>. All tasks defined in this tutorial will do so for convenience. The attribute is accessed using the Groovy <code>Node</code> attribute shorthand, namely the <code>@</code> prefix. The <code>?:</code> Groovy operator is very useful here; if the <code>greeting</code> attribute is <code>null</code>, we say "Hello World!" by default.</p>
+
+<p>In the test, we can choose to specify the <code>greeting</code> value by using the Groovy <code>Map</code> syntax within the parentheses following the task call. Can't really get simpler than that.</p>
+
+<p>Since nobody knows just <em>what</em> we might say at a given time, wouldn't it be nice if there were a record of what we said after the fact? After all, it could have been pithy genius - and we might not ever grace the world with the same greeting ever again. Let's transcribe our remarks to the generated report. To do this, we only need to modify the task.</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+class HelloWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        <span class="highlight">def greeting =</span> config.'@greeting' ?: 'Hello World!'
+        
+<span class="highlight">        println greeting
+        result.setMessage("Said: ${greeting}")</span>
+    }
+}
+</pre>
+
+<p>We set the message on the <code>result</code> object passed into the task's <code>doPerform()</code> method to record what was actually said. Now if you take a look at the report, you'll find a few items of interest. First, there are now entries for both <code>sayHello()</code> and <code>sayGreeting()</code>. Separate TestNG test methods are reported independently. Second, the value that we used as the greeting in <code>sayGreeting()</code> actually <em>is</em> displayed, despite my indicating otherwise - in the parameter list next to the name of the task. The parameter list for our original test <code>sayHello()</code> is empty. However, if you mouse over the task, you will see that the message we printed is available there.</p>
+
+<p>Let's take this opportunity to explore auto-wiring of properties. For task classes that extend <code>LightestTask</code>, the values of attributes set on the <code>config</code> object are automatically set to <code>String</code>, <code>int</code>, and <code>boolean</code> properties with the same name. This is convenient because values do not need to be referenced from <code>config</code>, which greatly improves the readability of the code. In the example below, we've turned <code>greeting</code> into a <code>String</code> property, with default visibility, which means that Groovy automatically creates getters and setters for us - which is what we want. We initialize it to the default value, "Hello World!". Then in <code>doPerform()</code>, we can assume that if a value for <code>greeting</code> was explicitly specified in the call to the task, that value will already have been assigned to <code>greeting</code>:</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+class HelloWorld extends LightestTask {
+    <span class="highlight">String greeting = 'Hello World!'</span>
+    
+    void doPerform(ITaskResult result) {
+        println greeting
+        result.setMessage("Said: ${greeting}")
+    }
+}
+</pre>
+
+<p>Note that two properties cannot be auto-wired, and must always be referenced from <code>config</code>: <em>name</em> and <em>value</em>.</p>
+
+<p>Next, we learn how to glean information about the context in which we're giving our salutations.</p>
+
+<h2>Save The Environment</h2>
+
+<p>Each test runs in an environment, which potentially contains information about settings and resources specific to the test. For example, a test that needs to access the filesystem may need to know the "home" folder of the application-under-test. So far, we haven't specified any environment data, and our tests have not depended on it. Let's add a new task that queries the environment for ... THE WORLD. For now, our task will simply be informational:</p>
+
+<em>QueryWorld.groovy</em>
+<pre>
+class QueryWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        result.setMessage("Current World: ${env.getWorld()}")
+    }
+}
+</pre>
+
+<p>The <code>env</code> object is another special object made available by <code>LightestTask</code>. It is set to the environment assigned to the running test. The environment itself has properties we will specify in a custom environment class that implements <code>ITestEnvironment</code>:</p>
+
+<em>TutorialEnvironment.groovy</em>
+<pre>
+import com.googlecode.lightest.core.TestEnvironment
+
+class TutorialEnvironment extends TestEnvironment {
+    String world
+}
+</pre>
+
+<p>This Groovy class simply declares the elements that can be configured in the environment. It should implement <code>ITestEnvironment</code>, which is taken care of by extending <code>TestEnvironment</code> . We want the world to be specified in our environment, so we simply add another property called <code>world</code>.</p>
+
+<p>Now we actually have to provide the environment information. To do this, we return to the configuration file:</p>
+
+<em>tutorial.config</em>
+<pre>
+config {
+    classPaths {
+        path ('/Users/chai/work/tutorial')
+    }
+<span class="highlight">    envs (class: 'TutorialEnvironment') {
+        env (id: 'default') {
+            world ('Earth')
+        }
+    }</span>
+}
+</pre>
+
+<p>We use the builder syntax again to declare <code>envs</code> as a list of environments that are of our type, <code>TutorialEnvironment</code>. Then we specify a "default" environment with its properties. With the environment in place, we should be able to use our newest task in a test:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+class Tutorial extends LightestTestCase {
+
+    Tutorial() {
+        def api = new SimpleApi()
+        setApi(api)
+    }
+    
+    @Test
+    void sayHello() {
+        HelloWorld ()
+    }
+    
+    @Test
+    void sayGreeting() {
+        <span class="highlight">QueryWorld ()</span>
+        HelloWorld (greeting: "Top of the mornin', world!")
+    }
+</pre>
+
+<p>Run the test, and take a look at the report. You should see an entry for the <code>QueryWorld</code> task, reporting a message of "Current World: Earth". No place like home!</p>
+
+<p>A final note before moving on to the next topic: preferences are another configurable entity, like environments. However, while there may be multiple environments for a given test run, these is only one set of preferences across the run. The idea behind having multiple environments is that you may want to have your integration tests run in parallel across multiple enviroments, for faster feedback. However, the preferences are intended to be cross-cutting - for example a timeout interval. Just as our custom environment implemented the <code>ITestEnvironment</code> interface, custom preferences implement <code>IPreferences</code>, which is a marker interface only. Here's a peek at how you might specify preferences in your config file:</p>
+
+<pre>
+config {
+    ...
+    prefs (class: 'MyCustomPreferencesClass') {
+        timeout (30)
+        speed (100)
+    }
+    ...
+}
+</pre>
+
+<h2>Turtles All The Way Down</h2>
+
+<p>So far we've been executing single tasks, and in the last section, two tasks, in the <code>sayGreeting()</code> test. Let's explore one of the cooler features of Lightest - task nesting. Sometimes you might have a group of tasks related to a shared goal. If any of the tasks fail, the goal cannot be achieved. By the same token, if the tasks succeed, it would be convenient to represent them as a single lineitem rather than a series of distinct tasks.</p>
+
+<p>We revisit the Groovy builder syntax. In Lightest tests, nested tasks can be specified in the same way that, for example, the configuration file specifies hierarchically organized values. With nested tasks, you have top level tasks, their children, and the children of their children - turtles all the way down. When all child tasks of a given parent task succeed (and the parent task itself is successful), the parent task is considered to have passed. If any child tasks fail, then the parent task is considered to have failed. If a parent task fails, the child tasks, which are assumed to have a dependency on the parent task, will not even be performed. We'll explore task failures further in the next section.</p>
+
+<p>Greeting the world requires there to be a world. Let's modify our test a bit (from here on in, code samples will focus just on the test in question):</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void sayGreeting() {
+        QueryWorld () <span class="highlight">{</span>
+            HelloWorld (greeting: "Top of the mornin', world!")
+        <span class="highlight">}</span>
+    }
+</pre>
+
+<p>Crack open the report and view the results for <code>sayGreeting()</code>. When you mouse over the <code>QueryWorld</code> task, it will expand. Notice one of the boxes in the upper-right corner of the task result, which will have one of the following values: &#19968;, &#20108;, or &#19977;. (These may not display correctly on your system unless you have chosen to "Install files for East Asian languages".) The default should be &#20108;. This refers to the display level of the task result, which you can toggle by clicking the header of the result - the line containing the task name and the task parameters. Click the header now. You should see the <code>HelloWorld</code> task result expand below the <code>QueryWorld</code> one, indented to indicate it is a child task. The task display level will now be &#19977;. Click it again to cycle to &#19968;, at which point the child result will hide itself again.</p>
+
+<p>You can use various control constructs within Groovy builder closures, for example <code>if</code> statements and <code>for</code> loops. We could do something nifty like this, to showcase our mastery over greetings across regions and tongues:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+<span class="highlight">    static final GREETINGS = [
+        "Top of the mornin', world!"
+        , "Howdy, world!"
+        , "G'day mate, world!"
+        , "Bonjour, world!"
+    ]</span>
+        
+    @Test
+    void sayGreeting() {
+        QueryWorld (<span class="highlight">description: 'Find a world, and greet it internationally'</span>) {
+            <span class="highlight">for (g in GREETINGS) {</span>
+                HelloWorld (greeting: g)
+            <span class="highlight">}</span>
+        }
+    }
+</pre>
+
+<p>When you run this test, you will see the following console output:</p>
+
+<pre>
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+</pre>
+
+<p>And when you drill down into the <code>QueryWorld</code> task result, setting the task display level to &#19977; as before, you will find 4 <code>HelloWorld</code> child tasks. The important thing to note is that all of our tasks thus far has been successful. It is very nice that the child tasks roll up and are hidden with &#19968; and &#20108;. The special <code>description</code> value set to the top level task gives us enough of an idea of what the job of the entire "task tree" is, and is easily viewable in the <code>QueryWorld</code> task result. Since all tasks passed, the details are hidden from us by default, and we have little reason to worry about them.</p>
+
+<p style="text-align: center"><img src="tutorial-images/international-hello.png" /></p>
+
+<p>Another cool aspect of nested tasks is that they are able to obtain information from their parent tasks, and their associated results. In the following example, the <code>HelloWorld</code> task checks to see if it has a parent <code>QueryWorld</code> task, and if so adds the message from the parent result to the current result. The <code>?.</code> safe dereferencing Groovy operator is used heavily to avoid <code>NullPointerException</code>'s for tasks that do not have a parent.</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+class HelloWorld extends LightestTask {
+    String greeting = 'Hello World!'
+    
+    void doPerform(ITaskResult result) {
+<span class="highlight">        def parentResult = result.parent
+        
+        if (parentResult?.getTask()?.class?.name == 'QueryWorld') {
+            greeting += " (${parentResult.getMessage()})"
+        }</span>
+        
+        println greeting
+        result.setMessage("Said: ${greeting}")
+    }
+}
+</pre>
+
+<p>The message for the nested <code>HelloWorld</code> tasks should now be reported as something like:</p>
+
+<pre>
+Said: Howdy, world! (Current World: Earth)
+</pre>
+
+<p>While the current example seems fairly trivial (indeed, does it make sense to echo a message that is already available in the report?), it does illustrate that the result hierarchy can be easily navigated. This can be used to good effect when child tasks need to modify their behavior based on the configuration and/or result of their parent tasks.</p>
+
+<p>So far things are going just peachy. We know how to write tasks, and provide information about the task run in the resulting report. We know how to get information about the environment, and to group related tasks via nesting. But now - you hear the ominous peal of thunder! In the next section, we'll experience stormier times...</p>
+
+<h2>Abject _______</h2>
+
+<p>In a way, tests are designed to fail. And the best tests give us lots of useful information when they fail. In this section, we explore task failures, especially failures in nested tasks. Let's have some fun!</p>
+
+<em>WorldNotFoundException.groovy</em>
+<pre>
+class WorldNotFoundException extends Exception {
+    WorldNotFoundException(String message) {
+        super(message)
+    }
+}
+</pre>
+
+<p>Evil empires are known to say, "we'll blow your PLANET up!"</p>
+
+<em>QueryWorld.groovy</em>
+<pre>
+class QueryWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+<span class="highlight">        def world = env.getWorld()
+        
+        assert world != null
+        
+        if ('Alderaan'.equalsIgnoreCase(env.getWorld())) {
+            throw new WorldNotFoundException("World not found: ${world}")
+        }
+        </span>
+        result.setMessage("Current World: ${env.getWorld()}")
+    }
+}
+</pre>
+
+<p>And the tweak to set the plan in motion:</p>
+
+<em>tutorial.config</em>
+<pre>
+config {
+    classPaths {
+        path ('/Users/chai/work/tutorial')
+    }
+    envs (class: 'TutorialEnvironment') {
+        env (id: 'default') {
+            world ('<span class="highlight">Alderaan</span>')
+        }
+    }
+}
+</pre>
+
+<p>Run the test! Now <em>that's</em> an unfamiliar sight in the console:</p>
+
+<pre>
+===============================================
+Suite1
+Total tests run: 2, <span class="highlight">Failures: 1</span>, Skips: 0
+===============================================
+
+</pre>
+
+<p>Check the report. You'll find that our <code>sayGreeting()</code> test from the above section is highlighted in red. If you mouse over the <code>QueryWorld</code> task, you will see the message is "Unexpected exception: World not found: Alderaan", and the <code>WorldNotFoundException</code> stack trace is shown as the response data. And our nested <code>HelloWorld</code> task? It's nowhere to be found, even if you change the task display level. That's because when parent tasks fail, their child tasks are not even performed.</p>
+
+<p>However, all is not lost. Unlike typical unit testing frameworks, the task-oriented nature of Lightest means the test may continue despite failures. See that in action by modifying the test to add a post-failure task:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void sayGreeting() {
+        QueryWorld (description: 'Find a world, and greet it internationally') {
+            for (g in GREETINGS) {
+                HelloWorld (greeting: g)
+            }
+        }
+        <span class="highlight">HelloWorld (greeting: 'Hello, non-blown-up world!')</span>
+    }
+</pre>
+
+<p>The test is still considered a failure; however you can see that the non-failing <code>HelloWorld</code> task was still performed, and indicated success. This is because it does not have a parent-child relationship with the failing task.</p>
+
+<p>What if the task that failed was the child task, not the parent? Let's add a new test called <code>sayHelloBeforeChecking()</code>:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void sayHelloBeforeChecking() {
+        HelloWorld (greeting: 'Hello, non-blown-up world!') {
+            QueryWorld (description: 'Oops, spoke too soon!')
+            HelloWorld (greeting: 'Hello, Smith Areans!')
+        }
+    }
+</pre>
+
+<p>Ah ha, when a child task fails, the parent fails too - but sibling tasks are still executed and may succeed. In this case, you have to click on the parent <code>HelloWorld</code> task for <code>sayHelloBeforeChecking()</code> to get the passing child <code>HelloWorld</code> task to display. This is because of the "smart" hiding of passing child tasks discussed in the previous section.</p>
+
+<p>We have just observed task failures due to exceptions being thrown by code within the task - the exception is caught and handled by the <code>LightestTask</code> superclass. Not all failures are caused by exceptions, however. Tasks (assertion tasks, for example) may check for conditions that, if unmet, will indicate the task has failed. They can do this by setting the status of the <code>result</code> object. Here we modify the <code>QueryWorld</code> task to <em>not</em> throw an exception:</p>
+
+<em>QueryWorld.groovy</em>
+<pre>
+class QueryWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        def world = env.getWorld()
+        
+        assert world != null
+        
+        if ('Alderaan'.equalsIgnoreCase(env.getWorld())) {
+            <span class="highlight">//</span>throw new WorldNotFoundException("World not found: ${world}")
+<span class="highlight">            result.setMessage("World not found: ${world}")
+            result.fail()
+        }
+        else {</span>
+            result.setMessage("Current World: ${env.getWorld()}")
+<span class="highlight">        }</span>
+    }
+}
+</pre>
+
+<p>The task now fails without a stacktrace. It is key to indicate any available information about the failure using <code>setMessage()</code>, to aid in debugging.</p>
+
+<p>The standard task result status when one is not set explicitly indicates success - that's why the earlier task implementations in this tutorial did not specify a status. Apart from <code>fail()</code>'ing the task, two other options are available to indicate anything but complete success: <code>flag()</code> and <code>doom()</code>. All three of these options result in failure for the containing test.</p>
+
+<p><code>flag()</code> should be used to indicate a potential error condition when performing a task. The intent is for the troubleshooter to see the failed test, drill down into its tasks to see the flagged task, and determine whether or not there is a real issue. <code>doom()</code> should be used when little or no value will be gained from continuing to execute the test; all tasks that have not yet been performed will be abandoned. This is similar to the behavior of typical unit testing frameworks upon encountering an exception.</p>
+
+<p>Experiment and have fun with the following example! Probably the most important thing to note is that any tasks following a <code>doom()</code>'ed task do not get executed.</p>
+
+<em>QueryWorld.groovy</em>
+<pre>
+class QueryWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        def world = env.getWorld()
+        
+        assert world != null
+        
+        if ('Alderaan'.equalsIgnoreCase(env.getWorld())) {
+            //throw new WorldNotFoundException("World not found: ${world}")
+            result.setMessage("World not found: ${world}")
+            result.fail()
+        }
+<span class="highlight">        else if ('Atlantis'.equalsIgnoreCase(env.getWorld())) {
+            result.setMessage("World quite difficult to find: ${world}")
+            result.flag()
+        }
+        else if ('Hades'.equalsIgnoreCase(env.getWorld())) {
+            result.setMessage("Unable to find more worlds: ${world}")
+            result.doom()
+        }</span>
+        else {
+            result.setMessage("Current World: ${env.getWorld()}")
+        }
+    }
+}
+</pre>
+
+<p style="text-align: center"><img src="tutorial-images/doomed.png" /></p>
+
+<p>TestNG is still hard at work behind the scenes, and this is evident when tests fail. In the reporting folder you will find a file called <em>testng-failed.xml</em>, which not only lists the failures as XML, but also allows you to easily rerun only the failed tests, with a command such as the following:</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar tutorial.config testng-failed.xml</pre>
+
+<p>Although you may specify multiple <em>.groovy</em> files to execute as tests when running Lightest, using TestNG's XML suite files gives much more flexibility. Consult the <a href="http://testng.org/doc/documentation-main.html">TestNG documentation</a> for more information on the suite XML syntax.</p>
+
+<h2>Task Synergy</h2>
+
+<p>Tasks are building blocks. It makes sense that you should be able to compose individual tasks into higher-level tasks. For example, if we're always going to query for a world before saying "hello" to it, we shouldn't have to repeat this pattern every time. With Lightest, task composition is a breeze. Let's create a new task called <code>GreetWorld</code>, essentially copying our <code>sayGreeting()</code> test:</p>
+
+<em>GreetWorld.groovy</em>
+<pre>
+import com.googlecode.lightest.core.ITaskResult
+import com.googlecode.lightest.core.LightestTask
+
+class GreetWorld extends LightestTask {
+    static final GREETINGS = [
+        "Top of the mornin', world!"
+        , "Howdy, world!"
+        , "G'day mate, world!"
+        , "Bonjour, world!"
+    ]
+
+     void doPerform(ITaskResult result) {
+         <span class="highlight">QueryWorld</span> (description: 'Find a world, and greet it internationally') {
+             for (g in GREETINGS) {
+                 <span class="highlight">HelloWorld</span> (greeting: g)
+             }
+         }
+         <span class="highlight">HelloWorld</span> (greeting: 'Hello, non-blown-up world!')
+     }
+}
+</pre>
+
+<p>That's all it takes! We can invoke our tasks directly in the <code>doPerform()</code> method of new task definitions. This is possible through more Groovy meta-programming magic.</p>
+
+<p>Let's create one more new task to keep things interesting:</p>
+
+<em>GoodbyeWorld.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+class GoodbyeWorld extends LightestTask {
+    
+    void doPerform(ITaskResult result) {
+        def lastWords = (config.'@lastWords'
+            ? "So long, and ${config.'@lastWords'}!" : 'Sayonara, sucker!')
+        
+        println lastWords
+        result.setMessage("*waved* and said: ${lastWords}")
+    }
+}
+</pre>
+
+<p>Tasks that are composed of other tasks can be used in exactly the same way as non-composed tasks in a testcase. Information on all component tasks is available in the test report, and will be folded under the containing task by default. The behavior of task nesting, however, does deserve some added attention. Consider the following test:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+<span class="highlight">    @Test
+    void helloGoodbye() {
+        GreetWorld () {
+            GoodbyeWorld (lastWords: 'thanks for all the fish')
+        }
+    }</span>
+</pre>
+
+<p>Here, we are saying that the <code>GoodbyeWorld</code> task depends on the <code>GreetWorld</code> task. When you run this test, you will see <code>GreetWorld</code>'s component tasks <code>QueryWorld</code> and <code>HelloWorld</code>, followed by the <code>GoodbyeWorld</code> task, all at the first nesting level under <code>GreetWorld</code>. You will have to expand the task result by clicking on the header to see the nested results. Let's get down to earth before running it:</p>
+
+<em>tutorial.config</em>
+<pre>
+        env (id: 'default') {
+            world ('<span class="highlight">Earth</span>')
+        }
+</pre>
+
+<p>Verify the task nesting in the report - then we're back to deep space!</p>
+
+<em>tutorial.config</em>
+<pre>
+        env (id: 'default') {
+            world ('<span class="highlight">Alderaan</span>')
+        }
+</pre>
+
+<p>The <code>QueryWorld</code> component task fails, causing the <code>GreetWorld</code> task that houses it to fail. Then, because <code>GoodbyeWorld</code> task depends on <code>GreetWorld</code>, which has failed, it is not even performed. However, according to normal nesting rules, the <code>HelloWorld</code> is still performed, and we can see that it is successful.</p>
+
+<p style="text-align: center"><img src="tutorial-images/hello-goodbye.png" /></p>
+
+<p>Composition of tasks is a fantastic way to make tests both more expressive and concise. And Lightest makes it a piece of cake!</p>
+
+<h2>Pass the Buck</h2>
+
+<p>The initial test scope for any test should be neutral, a clean slate so to speak. However, it's quite likely that as a test is run, context is added to that scope, and that tasks will want to share that contextual information. For example, if one task starts a sessioned application, follow-on tasks may want to know the session id.</p>
+
+<p>We could easily keep a variable in the test, and pass it to each task:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void helloGoodbye() {
+        def words = 'It was the best of times, it was the worst of times...'
+        
+        HelloWorld (greeting: <span class="highlight">words</span>)
+        GoodbyeWorld (lastWords: <span class="highlight">words</span>)
+    }
+</pre>
+
+<p>There's another way to accomplish the same, without explicitly passing values to the tasks every time - by adding the values to the <code>context</code>! We can modify the tasks to use context values if they are available:</p>
+
+<em>HelloWorld.groovy</em>
+<pre>
+    void doPerform(ITaskResult result) {
+        def greeting = config.'@greeting' ?: 'Hello World!'
+        ...
+        <span class="highlight">context.sharedWords = greeting</span>
+    }
+</pre>
+
+<em>GoodbyeWorld.groovy</em>
+<pre>
+    void doPerform(ITaskResult result) {
+        def lastWords = <span class="highlight">context.sharedWords</span> ?: config.'@lastWords'
+        
+        lastWords = lastWords ? "So long, and ${lastWords}!" : 'Sayonara, sucker!')
+        ...
+    }
+</pre>
+
+<p>With tasks defined as above, <code>GoodbyeWorld</code> could be invoked without passing the <code>lastWords</code> parameter, and would still have knowledge of how the world was greeted by <code>HelloWorld</code> . </p>
+
+<p>Context values stay around for the life of a test method, and are cleared afterwards. The are available in the main body of the test, and in any of its tasks. Hopefully this feature will make it easier for your tasks to share context with one another!</p>
+
+<h2>Crawl, Walk, Run, Fly</h2>
+
+<p>Ever want to pause a running test because you notice something spooky going on? Or have to comment-out parts of it and re-run in order to reproduce the conditions under which it failed? About as fun as soaking in a knife bath.</p>
+
+<p>Lightest offers several ways to interactively step through running tests which essentially boil down to test debugging. This is most easily demonstrated by starting the test runner in interactive mode, with the <code>--interactive</code> switch. Let's use our version of <code>helloGoodbye()</code> from a couple of sections back:</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void helloGoodbye() {
+        GreetWorld () {
+            GoodbyeWorld (lastWords: 'thanks for all the fish')
+        }
+    }
+</pre>
+
+<p>And ... go!</p>
+
+<pre>
+$ java -jar lightest-core-0.5-standalone.jar --interactive tutorial.config Tutorial.groovy
+[Parser] Running:
+  /tmp/lightest-suite10161.xml
+
+[entering interactive mode]
+Current task: "Find a world, and greet it internationally"
+QueryWorld {} ... at helloGoodbye(), line 25
+OK, "Current World: Earth"
+>>> 
+</pre>
+
+<p>In interactive mode, the next task is always run, and its results displayed, before a command is solicited from the user. We find the description of the task, the name of the task, its parameters (none provided for <code>QueryWorld</code> here), the line number and method name of the current position in the test file, the result status (<code>OK</code>), and the result message, all presented above the prompt. That's useful information! Note - the line number is accurate only for top-level tasks.</p>
+
+<p>You can always type <code>help</code> to get a listing of available commands:</p>
+
+<pre>
+>>> help
+[help]
+
+You are currently in interactive mode. You may step through test execution task
+by task and view the results of tasks as they are performed.
+
+Available commands:
+
+    a, again  Try the current task again.
+
+    c, crawl  Move to the next task, descending into child tasks (if any).
+
+    w, walk   Move to the next top-level task, skipping all child tasks.
+
+    r, run    Exit interactive mode and resume normal execution of tasks, until
+              either a failure or breakpoint is encountered.
+
+    f, fly    Exit interactive mode and resume normal execution of tasks. Don't
+              stop for anything less than user input.
+    
+    h, help   Show this help message.
+
+Current task: "Find a world, and greet it internationally"
+QueryWorld3 {} ... at helloGoodbye(), line 25
+OK, "Current World: Earth"
+>>> 
+</pre>
+
+<p>The help text is pretty self-explanatory - choose your mode of travel, depending on how quickly you want to step through the test. Let's try crawling first:</p>
+
+<pre>
+>>> c
+[crawl]
+Top of the mornin', world!
+Current task: ""
+HelloWorld {greeting=Top of the mornin', world!} ... at helloGoodbye(), line 25
+OK, "Said: Top of the mornin', world!"
+>>> c
+[crawl]
+Howdy, world!
+Current task: ""
+HelloWorld {greeting=Howdy, world!} ... at helloGoodbye(), line 25
+OK, "Said: Howdy, world!"
+>>> c
+[crawl]
+G'day mate, world!
+Current task: ""
+HelloWorld {greeting=G'day mate, world!} ... at helloGoodbye(), line 25
+OK, "Said: G'day mate, world!"
+>>> c
+[crawl]
+Bonjour, world!
+Current task: ""
+HelloWorld {greeting=Bonjour, world!} ... at helloGoodbye(), line 25
+OK, "Said: Bonjour, world!"
+>>>
+</pre>
+
+<p>Hmm, a little slow. Let's walk:</p>
+
+<pre>
+>>> w
+[walk]
+Hello, non-blown-up world!
+Current task: ""
+GreetWorld {} ... at helloGoodbye(), line 25
+OK, ""
+>>> w
+[walk]
+So long, and thanks for all the fish!
+
+===============================================
+Suite1
+Total tests run: 1, Failures: 0, Skips: 0
+===============================================
+
+$
+</pre>
+
+<p>What, the test is over, and we didn't even see the <code>GoodbyeWorld</code> task!? This is because <code>walk</code>ing always steps through the top level tasks, and <em>steps over</em> child tasks. We can change that by setting a breakpoint in our test, however! The breakpoint parameter is available to all tasks that subclass <code>LightestTask</code>.</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test
+    void helloGoodbye() {
+        GreetWorld () {
+            GoodbyeWorld (lastWords: 'thanks for all the fish', <span class="highlight">breakpoint: true</span>)
+        }
+    }
+</pre>
+
+<p>Ok, here we go:</p>
+
+<pre>
+[entering interactive mode]
+Current task: "Find a world, and greet it internationally"
+QueryWorld3 {} ... at helloGoodbye(), line 25
+OK, "Current World: Earth"
+>>> w
+[walk]
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+Hello, non-blown-up world!
+Current task: ""
+GreetWorld {} ... at helloGoodbye(), line 25
+OK, ""
+>>> w
+[walk]
+So long, and thanks for all the fish!
+<span class="highlight">[breakpoint]</span>
+Current task: ""
+GoodbyeWorld {lastWords=thanks for all the fish} ... at helloGoodbye(), line 25
+OK, "*waved* and said: So long, and thanks for all the fish!"
+>>> 
+</pre>
+
+<p>Ah ha, now we have a chance to inspect the situation around the execution of the <code>GoodbyeWorld</code> task! Setting breakpoints on tasks is a convenient way to stop the test at a given point. Remember that for the breakpoint to take effect, you must be in interactive mode. Once in interactive mode, you can <code>run</code> to the next breakpoint if you don't want to stop and smell the roses along the way.</p>
+
+<p>To segue into the next section, let me demonstrate how you can jump into interactive mode even when the test runner was started normally.</p>
+
+<em>Tutorial.groovy</em>
+<pre>
+    @Test<span class="highlight">(invocationCount = 50, threadPoolSize = 1)</span>
+    void helloGoodbye() {
+        GreetWorld () {
+            GoodbyeWorld (lastWords: 'thanks for all the fish', breakpoint: true)
+        }
+    }
+</pre>
+
+<p>We added TestNG annotation parameters to indicate the the test should run, not once, but fifty times. A thread pool size of 1 indicates that all tests should be run sequentially in a single thread. This is important, because interactive mode <em>cannot</em> be entered during multi-threaded test runs. (Ok, that's a white lie - you might be able to enter interactive mode, but it won't be pretty!)</p>
+
+<p>To enter interactive mode while the test is running, start the test without the <code>--interactive</code> switch, and hit the <strong>Enter</strong> key any time when the test is running. You'll pop into interactive mode! From here, you can do anything you would normally do in interactive mode.</p>
+
+<pre>
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+Hello, non-blown-up world!
+So long, and thanks for all the fish!
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+Hello, non-blown-up world!
+So long, and thanks for all the fish!
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+Hello, non-blown-up world!
+So long, and thanks for all the fish!
+
+Top of the mornin', world!
+Howdy, world!
+G'day mate, world!
+Bonjour, world!
+Hello, non-blown-up world!
+So long, and thanks for all the fish!
+[entering interactive mode]
+Current task: "Find a world, and greet it internationally"
+QueryWorld3 {} ... at helloGoodbye(), line 25
+OK, "Current World: Earth"
+>>> <span class="highlight">yay! &lt;--- much rejoicing</span>
+</pre>
+
+<h2>Pat Your Head, Rub Your Belly</h2>
+
+<p>How about running your tests in parallel? Sounds great, right? - running everything simultaneously, everything should finish in better time! Not quite ...</p>
+
+<p>All tests need environments to run in. What's more, each environment should not have more than one test mucking around in it at a time - that's a recipe for surprising (and useless!) results. Therefore, if we want to run tests in parallel, we need to guarantee a unique environment for each test, for the duration of that test.</p>
+
+<p>In Lightest, environments are specified in the configuration file. Whereas in the examples above we have been dealing with a single environment, we can easily specify multiple environments, so long as their associated resources do not conflict. This last point is important - if the environment involves resources such as executables or the filesystem, <em>it should not share them with any other environment</em>. In our trivial tutorial example we don't have to worry about this:</p>
+
+<em>tutorial.config</em>
+<pre>
+    envs (class: 'TutorialEnvironment') {
+        env (id: 'default') {
+            world ('Earth')
+        }
+        env (id: 'retreat') {
+            world ('Moon')
+        }
+        env (id: 'last stand') {
+            world ('Mars')
+        }
+    }
+</pre>
+
+<p>With this configuration, we may run a maximum of three tests concurrently. In fact, this is the magic number of concurrent tests allowed by default when you do not explicitly define environments in the configuration file. If there are more concurrent test threads than defined environments, all test threads will block until environments in which they may run are freed up.</p>
+
+<p>There are several ways to run tests concurrently in TestNG, specifying the number of threads in the suite XML probably being the easiest:</p>
+
+<em>testng.xml</em>
+<pre>
+&lt;suite name='Suite1' <span class="highlight">parallel='methods' thread-count='5'</span>&gt;
+  &lt;test name='Test1'&gt;
+    &lt;classes&gt;
+      &lt;class name='Tutorial' /&gt;
+    &lt;/classes&gt;
+  &lt;/test&gt;
+&lt;/suite&gt;
+</pre>
+
+<p>Then running:</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar tutorial.config testng.xml</pre>
+
+<p>Note that while test methods may be running in their own threads, Lightest requires that all test methods within a given testcase class be run using the same test environment. Methods from different classes, however, may of course run with different environments.</p>
+
+<p>The Lightest report displays the environment used by each test (the <code>default</code> environment here):</p>
+
+<p style="text-align: center"><img src="tutorial-images/environment.png" /></p>
+
+<p>Work has been done to make test concurrency stable in Lightest. However, if you encounter flakiness, please do file a bug in the <a href="http://code.google.com/p/lightest/issues/list">issue tracker</a>! But don't all get up at once!</p>
+
+<h2>The Real World</h2>
+
+<p>"All this is well and good", you say, "but anyone can write a test framework that simply prints 'Hello World!' !" And you'd be correct! For the final part of this tutorial, we tour a sample implementation of a <a href="http://selenium.seleniumhq.org">Selenium</a> web test using Lightest. Our goal is to create a test that verifies the Lightest project page is ranked among the top search results, using several popular search engines.</p>
+
+<h3>Setup</h3>
+
+<p>We start by <a href="http://selenium.seleniumhq.org/projects/remote-control/download.html">downloading the Selenium RC</a>, configuring our environment, and bringing up the Selenium server instance. The server will be part of our test environment, so we define properties associated with it.</p>
+
+<em>SeleniumEnvironment.groovy</em>
+<pre>
+import com.googlecode.lightest.core.TestEnvironment
+
+class SeleniumEnvironment extends TestEnvironment {
+<span class="highlight">    String seleniumServerHost
+    int seleniumServerPort
+    String defaultBrowserStartCommand</span>
+}
+</pre>
+
+<p>Copy the Selenium Java client driver JAR to some location which you can reference from your configuration file. We'll need it to be on the class path so our tasks can use its classes.</p>
+
+<em>tutorial.config</em>
+<pre>
+config {
+    classPaths {
+        path ('/home/chai/work/lightest/core/tutorial/selenium-java-client-driver.jar')
+    }
+    envs (class: 'SeleniumEnvironment') {
+        env (id: 'default') {
+            seleniumServerHost ('localhost')
+            seleniumServerPort (4444)
+            defaultBrowserStartCommand ('*firefox')
+        }
+    }
+}
+</pre>
+
+<p>Now start up the Selenium server. We'll keep it running while we build the rest of the test just so it's available.</p>
+
+<pre>
+$ <span class="highlight">java -jar selenium-server.jar -singleWindow</span>
+13:11:57.426 INFO - Java: Sun Microsystems Inc. 1.6.0_0-b11
+13:11:57.427 INFO - OS: Linux 2.6.24-22-generic i386
+13:11:57.429 INFO - v1.0-SNAPSHOT [1123], with Core v@VERSION@ [@REVISION@]
+13:11:57.530 INFO - Version Jetty/5.1.x
+13:11:57.531 INFO - Started HttpContext[/selenium-server/driver,/selenium-server/driver]
+13:11:57.533 INFO - Started HttpContext[/selenium-server,/selenium-server]
+13:11:57.533 INFO - Started HttpContext[/,/]
+13:11:57.540 INFO - Started SocketListener on 0.0.0.0:4444
+13:11:57.543 INFO - Started org.mortbay.jetty.Server@1d2068d
+</pre>
+
+<h3>Create Tasks</h3>
+
+<p>Let's make some generic Selenium tasks. We want one to create a Selenium instance, execute a Selenium command, and close the Selenium instance. We'll use the <code>HttpCommandProcessor</code> class instead of <code>DefaultSelenium</code> so that the core Selenium verification methods are available to us.</p>
+
+<em>OpenSelenium.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+import com.thoughtworks.selenium.<span class="highlight">HttpCommandProcessor</span>
+
+/**
+ * Starts a Selenium instance, and attaches it to the context as a property
+ * called "selenium". An alternate label can be provided for case when multiple
+ * Selenium instances are used at the same time.
+ */
+class OpenSelenium extends LightestTask {
+    
+    /**
+     * Environment:
+     *   seleniumServerHost
+     *   seleniumServerPort
+     *   defaultBrowserStartCommand
+     *
+     * Requires:
+     *   browserStartCommand
+     *   browserURL
+     *
+     * Optional:
+     *   browserStartCommand (defaults to env.defaultBrowserStartCommand)
+     *   label (defaults to "selenium")
+     *
+     */
+    void doPerform(ITaskResult result) {
+        assert env.seleniumServerHost != null
+        assert env.seleniumServerPort != null
+        assert config.'@browserURL' != null
+        
+        def browserStartCommand = (config.'@browserStartCommand'
+            ?: env.defaultBrowserStartCommand)
+        def label = config.'@label' ?: 'selenium'
+        
+        def selenium = <span class="highlight">new HttpCommandProcessor(</span>
+            env.seleniumServerHost,
+            env.seleniumServerPort,
+            browserStartCommand,
+            config.'@browserURL'<span class="highlight">)</span>
+        
+        selenium.start()
+        
+        result.setMessage('Successfully opened browser')
+        
+        // close an existing labeled instance, if any
+        
+        if (context[label] instanceof HttpCommandProcessor) {
+            context[label].stop()
+        }
+        
+        context[label] = selenium
+    }
+}
+</pre>
+
+<em>DoSelenium.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+class DoSelenium extends LightestTask {
+    
+    /**
+     * Requires:
+     *   command
+     *   target
+     *
+     * Optional:
+     *   value (defaults to "")
+     *   label (defaults to "selenium")
+     */
+    void doPerform(ITaskResult result) {
+        assert config.'@command' != null
+        assert config.'@target' != null
+        
+        def command = config.'@command'
+        def target = config.'@target'
+        def value = config.'@value' ?: ""
+        def label = config.'@label' ?: 'selenium'
+        def args = (String[]) [ target, value ]
+        
+        result.setMessage(context[label].<span class="highlight">doCommand(</span>command, args<span class="highlight">)</span>)
+    }
+}
+</pre>
+
+<em>CloseSelenium.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+import com.thoughtworks.selenium.HttpCommandProcessor
+
+class CloseSelenium extends LightestTask {
+    
+    /**
+     * Optional:
+     *   label (defaults to "selenium")
+     */
+    void doPerform(ITaskResult result) {
+        def label = config.'@label' ?: 'selenium'
+        
+        if (context[label] instanceof HttpCommandProcessor) {
+            context[label].<span class="highlight">stop()</span>
+        }
+        
+        context[label] = null
+    }
+}
+</pre>
+
+<h3>Define Search Engines</h3>
+
+<p>We said we wanted to be able to test multiple search engines. Let's create a simplistic interface representing a web search engine as viewed by Selenium, and create a few implementations.</p>
+
+<em>SearchEngine.groovy</em>
+<pre>
+interface SearchEngine {
+    
+    /**
+     * Returns the URL String where the search can be initiated.
+     */
+    String getUrl()
+    
+    /**
+     * Returns the Selenium locator for the search box, which can be typed
+     * into.
+     */
+    String getSearchLocator()
+    
+    /**
+     * Returns the Selenium locator for the search submission element, which
+     * can be clicked.
+     */
+    String getSubmitLocator()
+    
+    /**
+     * Returns the Selenium locator for all entries on the search result page
+     * whose links point to a URL that starts with the given String.
+     *
+     * @param startsWithURL  the URL the result links should start with
+     */
+    String getResultEntryLocator(String startsWithURL)
+}
+</pre>
+
+<p>Here come the real engines! You can see that these "implementations" are essentially configurations, with no significant variations in code. We use the convenient Groovy feature of automatically adding getters for defined properties to implement most <code>get*()</code> methods of the interface.</p>
+
+<em>GoogleSearch.groovy</em>
+<pre>
+class GoogleSearch implements SearchEngine {
+    String url = 'http://www.google.com'
+    String searchLocator = 'name=q'
+    String submitLocator = 'name=btnG'
+    
+    String getResultEntryLocator(String startsWithURL) {
+        return "xpath=id('res')/descendant::a[starts-with(@href, '${startsWithURL}')]"
+    }
+}
+</pre>
+
+<em>LiveSearch.groovy</em>
+<pre>
+class LiveSearch implements SearchEngine {
+    String url = 'http://www.live.com'
+    String searchLocator = 'name=q'
+    String submitLocator = 'name=go'
+    
+    String getResultEntryLocator(String startsWithURL) {
+        return "xpath=id('results')/descendant::a[starts-with(@href, '${startsWithURL}')]"
+    }
+}
+</pre>
+
+<em>YahooSearch.groovy</em>
+<pre>
+class YahooSearch implements SearchEngine {
+    String url = 'http://www.yahoo.com'
+    String searchLocator = 'id=p'
+    String submitLocator = 'id=searchsubmit'
+    
+    String getResultEntryLocator(String startsWithURL) {
+        return "xpath=id('web')/descendant::a[starts-with(@href, '${startsWithURL}')]"
+    }
+}
+</pre>
+
+<em>CuilSearch.groovy</em>
+<pre>
+class CuilSearch implements SearchEngine {
+    String url = 'http://www.cuil.com'
+    String searchLocator = 'name=q'
+    String submitLocator = "xpath=/descendant::button[@title='Search']"
+    
+    String getResultEntryLocator(String startsWithURL) {
+        return "xpath=/descendant::div[@class='result']/descendant::a[starts-with(@href, '${startsWithURL}')]"
+    }
+}
+</pre>
+
+<h3>Testcase, Take 1</h3>
+
+<p>Let's take a stab at writing this test.</p>
+
+<em>SeleniumTutorial.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTestCase
+import com.googlecode.lightest.core.SimpleApi
+import org.testng.annotations.*
+
+class SeleniumTutorial extends LightestTestCase {
+
+    SeleniumTutorial() {
+        def api = new SimpleApi()
+        setApi(api)
+    }
+    
+    @Test
+    void lightestProjectPageIsRanked() {
+        def engines = [
+            new GoogleSearch(),
+            new LiveSearch(),
+            new YahooSearch(),
+            new CuilSearch()
+        ]
+        
+        for (engine in engines) {
+            OpenSelenium (browserURL: engine.getUrl())
+            DoSelenium (command: 'open', target: '/')
+            DoSelenium (command: 'type', target: engine.getSearchLocator(), value: 'lightest test')
+            DoSelenium (command: 'clickAndWait', target: engine.getSubmitLocator())
+            DoSelenium (command: 'verifyElementPresent', target: engine.getResultEntryLocator('http://code.google.com/p/lightest'))
+            CloseSelenium ()
+        }
+    }
+}
+</pre>
+
+<p>Run it:</p>
+
+<pre>$ java -jar lightest-core-0.5-standalone.jar tutorial.config SeleniumTutorial.groovy</pre>
+
+<p>This actually works! And we get a nice report detailing each Selenium step! Let's see if we can do even better. We want to quickly be able to scan the report for each search engine. The results for the above test for each of the various search engines are a bit tedious to analyze. And simply copy-pasting to more <code>@Test</code>'s would violate the <a href="http://en.wikipedia.org/wiki/DRY">DRY principle</a>.</p>
+
+<h3>Testcase, Take 2</h3>
+
+<p>We define a new composite task called <code>AssertResultRanked</code> that operates upon a provided search engine.</p>
+
+<em>AssertResultRanked.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestTask
+import com.googlecode.lightest.core.ITaskResult
+
+/**
+ * Asserts that a given site is ranked on the first results page for a given
+ * search term and search engine. Opens a new Selenium instance for this
+ * purpose, and closes it when done.
+ */
+class AssertResultRanked extends LightestTask {
+    
+    /**
+     * Requires:
+     *   searchTerm
+     *   siteURL
+     *
+     * Optional:
+     *   searchEngine (defaults to instance of GoogleSearch)
+     */
+    void doPerform(ITaskResult result) {
+        assert config.'@searchTerm' != null
+        assert config.'@siteURL' != null
+        
+        def searchTerm = config.'@searchTerm'
+        def siteURL = config.'@siteURL'
+        SearchEngine engine = config.'@searchEngine' ?: new GoogleSearch()
+        
+        OpenSelenium (browserURL: engine.getUrl())
+        DoSelenium (command: 'open', target: '/')
+        DoSelenium (command: 'type', target: engine.getSearchLocator(), value: searchTerm)
+        DoSelenium (command: 'clickAndWait', target: engine.getSubmitLocator())
+        DoSelenium (command: 'verifyElementPresent', target: engine.getResultEntryLocator(siteURL))
+        CloseSelenium ()
+    }
+}
+</pre>
+
+<p>Now our test across all search engines is much simplified:</p>
+
+<em>SeleniumTutorial.groovy</em>
+<pre>
+    @Test
+    void lightestProjectPageIsRanked() {
+        def engines = [
+            new GoogleSearch(),
+            new LiveSearch(),
+            new YahooSearch(),
+            new CuilSearch()
+        ]
+        
+        for (engine in engines) {
+            AssertResultRanked (searchTerm: 'lightest test', siteURL: 'http://code.google.com/p/lightest', searchEngine: engine)
+        }
+    }
+}
+</pre>
+
+<p>A top level result in the report is now associated with each search engine. It's easy to see which ones failed our ranking test! (Maybe this will change ... with time?)</p>
+
+<p style="text-align: center"><img src="tutorial-images/selenium-results.png" /></p>
+
+<h3>Testcase, Take 3</h3>
+
+<p>The above is just one of the many ways you might create a test framework using Selenium and Lightest. I hope this simple example serves to get the juices flowing! Here I will present an alternative approach to writing the same test, this time making it possible to use Selenium in way you would outside of the Lightest framework. This section is considerably more advanced than the previous; feel free to skip it for now.</p>
+
+<p>The idea is to allow Selenium commands to be invoked directly off an object, instead of via tasks:</p>
+
+<pre>
+selenium.click('btnG')
+</pre>
+
+<p>But we still want tasks to be created, for reporting purposes, so that we can put the test in interactive mode, and to enjoy the other benefits of using Lightest. For this, we will reuse the three tasks <code>OpenSelenium</code>, <code>DoSelenium</code>, and <code>CloseSelenium</code> defined above. We will extend the <code>HttpCommandProcessor</code> so that, instead of executing commands directly, commands are "intercepted", so to speak, and routed through these tasks. The command processor created by <code>OpenSelenium</code> will be the one that actually does the heavy lifting. Then we will wrap the <code>DefaultSelenium</code> object so that it plays nicely with closures, which are integral to the builders at the core of Lightest.</p>
+
+<em>TaskBackedCommandProcessor.groovy</em>
+<pre>
+import com.googlecode.lightest.core.ITaskProvider
+import com.googlecode.lightest.core.LightestTestCase
+import com.googlecode.lightest.core.LightestTask
+import com.thoughtworks.selenium.HttpCommandProcessor
+import com.googlecode.lightest.core.LightestContext
+
+/**
+ * Produces Lightest tasks that send commands to the server, instead of doing
+ * so directly. This example implementation borrows most functionality from the
+ * parent class for convenience, and DOES NOT consistently override all
+ * inherited methods.
+ * 
+ * <span class="highlight">setContext() must be called before any of start(), doCommand(), or stop()</span>
+ * to set the object that is used to fetch the task provider for creating the
+ * API tasks OpenSelenium, DoSelenium, and CloseSelenium, respectively.
+ */
+public class TaskBackedCommandProcessor <span class="highlight">extends HttpCommandProcessor</span> {
+    LightestContext context
+    
+    private browserStartCommand
+    private browserURL
+
+    /**
+     * @param browserStartCommand  this value is fed to the OpenSelenium task.
+     *                             Even if null, the task should obtain an
+     *                             appropriate default from the environment.
+     * @param browserURL
+     */
+    TaskBackedCommandProcessor(String browserStartCommand, String browserURL) {
+        <span class="highlight">// we never actually invoke the superclass' doCommand()</span>
+        super('localhost', 4444, browserStartCommand, browserURL)
+        
+        this.browserStartCommand = browserStartCommand
+        this.browserURL = browserURL
+    }
+    
+    @Override
+    String doCommand(String command, String[] args) {
+        def target = (args.length > 0) ? args[0] : ""
+        def value = (args.length > 1) ? args[1] : ""
+        def result = getTaskProvider().<span class="highlight">DoSelenium</span> (command: command,
+            target: target, value: value)
+         
+        return result.getMessage()
+    }
+
+    @Override
+    void start() {
+        getTaskProvider().<span class="highlight">OpenSelenium</span> (
+            browserStartCommand: browserStartCommand, browserURL: browserURL)
+    }
+    
+    @Override
+    void stop() {
+        getTaskProvider().<span class="highlight">CloseSelenium</span> ()
+    }
+    
+    private ITaskProvider getTaskProvider() {
+        assert context != null
+        return <span class="highlight">context.getTaskProvider()</span>
+    }
+}
+</pre>
+
+<p>Within the scope of a testcase or a task, tasks can normally be invoked simply by specifying the task name. This is because tests and tasks are considered <em>task providers</em>, and specifically implement the <code>ITaskProvider</code> interface. In other scopes, we need to obtain an <code>ITaskProvider</code> from which to invoke tasks. This can be obtained from a <code>LightestContext</code> object, which must be set on the <code>TaskBackedCommandProcessor</code> before key methods are called (as the highlighted documentation indicates).</p>
+
+<p>Once we have the task provider, we can invoke tasks off of it directly. Note that the task provider is queried for each task invocation via <code>getTaskProvider()</code>, and <em>is not cached</em>. The reason for this is that the currently appropriate task provider may change through the course of the test. The <code>LightestContext</code> object is made aware of all such changes, and should always be consulted for the current task provider.</p>
+
+<p>Next, we wrap the Selenium object for special behaviors:</p>
+
+<em>TaskBackedSelenium.groovy</em>
+<pre>
+import com.googlecode.lightest.core.LightestContext
+import com.googlecode.lightest.core.TaskNodeBuilder
+import com.thoughtworks.selenium.DefaultSelenium
+import com.thoughtworks.selenium.GroovySelenium
+import com.thoughtworks.selenium.Selenium
+
+/**
+ * This extension of the GroovySelenium wrapper object is specialized for
+ * Lightest, and will not choke when used inside a TaskNodeBuilder closure. Its
+ * command processor, a TaskBackedCommandProcessor, produces tasks for running
+ * Selenium commands.
+ * 
+ * setContext() should be called to set the context used both to determine the
+ * closure state, and for the underlying command processor to build tasks.
+ */
+class TaskBackedSelenium extends GroovySelenium {
+    private TaskBackedCommandProcessor commandProcessor
+    private LightestContext context
+    
+    TaskBackedSelenium(String browserStartCommand, String browserURL) {
+        this(new TaskBackedCommandProcessor(browserStartCommand, browserURL))
+    }
+    
+    TaskBackedSelenium(TaskBackedCommandProcessor commandProcessor) {
+        this(new DefaultSelenium(commandProcessor))
+        this.commandProcessor = commandProcessor
+    }
+    
+    private TaskBackedSelenium(Selenium selenium) {
+        super(selenium)
+    }
+    
+    void setContext(LightestContext context) {
+        this.context = context
+        commandProcessor.setContext(context)
+    }
+    
+    /**
+     * Swallows exceptions that originate when the method is invoked inside a
+     * TaskNodeBuilder closure. The underlying command processor will not yield
+     * return values for such calls, which may cause its calling methods to
+     * fail.
+     */
+    @Override
+    def methodMissing(String name, args) {
+        try {
+            return super.methodMissing(name, args)
+        }
+        catch (e) {
+<span class="highlight">            def taskProvider = context.getTaskProvider()
+            
+            if (! (taskProvider instanceof TaskNodeBuilder)) {
+                throw e
+            }</span>
+        }
+    }
+}
+</pre>
+
+<p>The <code>GroovySelenium</code> object wraps a <code>Selenium</code> implementation, and adds some convenient features, such as the ability to merge <code>waitForPageToLoad()</code> calls into normal methods invoked on the Selenium object. But here we take advantage of the fact that it routes all Selenium API calls through <code>methodMissing()</code> to catch exceptions related to the conflict of imposing task-orientation on the Selenium implementation.</p>
+
+<p>What you say?! I'll explain after finishing up this example with modifications to the <code>AssertResultRanked</code> task:</p>
+
+<em>AssertResultRanked.grooy</em>
+<pre>
+import com.googlecode.lightest.core.*
+import com.thoughtworks.selenium.DefaultSelenium
+
+/**
+ * Asserts that a given site is ranked on the first results page for a given
+ * search term and search engine. Opens a new Selenium instance for this
+ * purpose, and closes it when done.
+ */
+class AssertResultRanked extends LightestTask {
+    
+    /**
+     * Requires:
+     *   searchTerm
+     *   siteURL
+     *
+     * Optional:
+     *   browserStartCommand
+     *   searchEngine (defaults to instance of GoogleSearch)
+     */
+    void doPerform(ITaskResult result) {
+        assert config.'@searchTerm' != null
+        assert config.'@siteURL' != null
+        
+        def searchTerm = config.'@searchTerm'
+        def siteURL = config.'@siteURL'
+        SearchEngine engine = config.'@searchEngine' ?: new GoogleSearch()
+        
+        def selenium = createSelenium(config.'@browserStartCommand',
+            engine.getUrl())
+        
+<span class="highlight">        selenium.start()
+        selenium.open('/')
+        selenium.type(engine.getSearchLocator(), searchTerm)
+        selenium.clickAndWait(engine.getSubmitLocator())</span>
+        
+        def entryLocator = engine.getResultEntryLocator(siteURL)
+        
+        if (<span class="highlight">! selenium.isElementPresent(entryLocator)</span>) {
+            result.setMessage('The site URL was not found in the results!')
+            result.fail()
+        }
+        
+        <span class="highlight">selenium.stop()</span>
+    }
+    
+    /**
+     * Returns a new Selenium object that creates tasks as it executes
+     * commands.
+     * 
+     * @param browserStartCommand
+     * @param browserURL
+     */
+    def createSelenium(browserStartCommand, browserURL) {
+        def selenium = new TaskBackedSelenium(browserStartCommand, browserURL)
+        
+        <span class="highlight">selenium.setContext(getContext())</span>
+        
+        return selenium
+    }
+}
+</pre>
+
+<p>Yeah, that's how most people familiar with the Selenium API want to be writing their tests - invoking commands directly off the object! If you run this tests, you will find that each command will be translated into the appropriate task, whose results will be displayed in the report much like they were for the previous testcase iterations! <em>Sweet!</em></p>
+
+<p>Now I will explain the significance of the behavior added to <code>methodMissing()</code> for <code>TaskBackedSelenium</code> .</p>
+
+<p>A quick recap of key points to note about the Selenium java client driver:</p>
+
+<ul>
+<li>The <code>doCommand()</code> method of <code>HttpCommandProcessor</code> returns <code>String</code>.</li>
+<li>All <code>DefaultSelenium</code> API methods delegate to the underlying command processor. Many of these do not care about the value the command processor returns from <code>doCommand()</code>.</li>
+<li>However, many API method <em>do</em> care about the return value. In fact, instead of simply calling <code>doCommand()</code>, they will call methods like <code>getString()</code>, which require that <code>doCommand()</code> return a <code>String</code> appropriate to the command.</li>
+</ul>
+
+<p>Ok, so why even worry about this? Invoking the <code>DoSelenium</code> task, which is the one that wraps <code>doCommand()</code>, should always return a result whose message is the <code>String</code> returned by <code>doCommand()</code>, right?</p>
+
+<p>Well, not exactly. In most normal cases, the <code>String</code> will be returned. However, in builder closures, tasks are not performed immediately. "Invoking" the task in a closure does <em>not</em> call its <code>doPerform()</code>; instead, it causes the builder to create a <em>node</em> representing the task. When the node is "evaluated" at some later point, only then is the task performed. The key point is that, since the task will not be executed immediately in a closure, it <em>will not return a value</em>. For the <code>TaskBackedCommandProcessor</code>, this will certainly cause an exception to be thrown by methods like <code>getString()</code>.</p>
+
+<p>Our simple solution is twofold - one, just ignore the exception if we detect we are in a builder closure; and two, don't expect API methods that normally return values to return values when inside builder closures. The code that implements number one is highlighted in <em>TaskBackedSelenium.groovy</em> above. And for number two, we simply avoid looking up Selenium API return values in builder closures. So for example, the following would work:</p>
+
+<pre>
+DoSelenium (command: 'type', target: 'q', value: 'lightest selenium') {
+    selenium.clickAndWait('btnG')
+}
+</pre>
+
+<p>But we would want to avoid this, because it won't work as expected:</p>
+
+<pre>
+DoSelenium (command: 'type', target: 'q', value: 'lightest selenium') {
+    assertEquals('lightest selenium', selenium.getValue('q')) 
+}
+</pre>
+
+<p>It won't work because at the time <code>assertEquals()</code> is evaluated, <code>getValue()</code> is <em>creating a node, not returning a value</em>! However, if you ever wanted to do this:</p>
+
+<pre>
+DoSelenium (command: 'type', target: 'q', value: 'lightest selenium') {
+    selenium.getValue('q') 
+}
+</pre>
+
+<p>no exception would be thrown. This is because the exception thrown under the covers by <code>HttpCommandProcessor</code> is being hidden from view by the exception handling in <code>methodMissing()</code> .</p>
+
+<p>Interesting stuff, huh? All this is in an effort to have the framework accommodate a "non-Lightest" way of writing tests. As you can see, it can be done successfully, but requires some careful thought and avoidance of certain pitfalls!</p>
+
+<h2>Taste of Paradise</h2>
+
+<p>That just about wraps up our tour of Lightest. The Lightest project is really just getting underway, and there are exciting improvements on the horizon. To conclude, I'd like to share what I think some cool features would be:</p>
+
+<ul>
+<li>Grails webapp - test manager and execution engine.</li>
+<li>Persisting results to a database, and mining the results for comparisons.</li>
+<li>A Java annotation editor (again via a webapp), so the annotation-based metadata about tests can be managed with ease.</li>
+<li><strike>An extension system, so new tasks can be created via composition of existing tasks.</strike></li>
+<li>A Maven plugin.</li>
+</ul>
+
+<p>I'd love to receive feedback on your experiences with Lightest. Drop by the project page at <a href="http://code.google.com/p/lightest">http://code.google.com/p/lightest</a> or file a bug or enhancement request. Also, I hope to get a new website up at <a href="http://stressfreetesting.com">http://stressfreetesting.com</a>, where Lightest will be a spotlight technology - there should be more information available there too. Enjoy!</p>
+
+<p><em>- Haw-Bin Chai (hbchai @t gmail d0t com)</em></p>
+
+<br />
+<br />
+<br />
+<br />
+
+</body>
+</html>

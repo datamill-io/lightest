@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite thread-count="1" skipfailedinvocationCounts="false" name="Suite1" junit="false" parallel="classes" annotations="JDK" data-provider-thread-count="10">
+  <test name="Test1" junit="false">
+    <classes>
+      <class name="com.googlecode.lightest.distributed.FailureTest"/>
+      <class name="com.googlecode.lightest.distributed.SuccessfulTest"/>
+    </classes>
+  </test>
+</suite>

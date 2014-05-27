@@ -1,0 +1,22 @@
+allprojects  {
+  apply plugin: 'idea'
+
+  group = 'com.googlecode.lightest'
+  version = '1-SNAPSHOT'
+}
+
+subprojects {
+  apply plugin: 'java'
+  apply plugin: 'groovy'
+  
+  sourceCompatibility = 1.7
+  targetCompatibility = 1.7
+  
+  repositories {
+    mavenLocal()
+    
+    maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://github.com/cosminaru/reporty-ng/raw/master/dist/maven" }
+    maven { url "http://nexus.openqa.org/content/repositories/releases/" }
+  }
+}
